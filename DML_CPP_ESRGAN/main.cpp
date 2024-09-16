@@ -4,6 +4,7 @@
 #include "pch.h"
 #include "helpers.h"
 
+
 void RunModel(
     IDMLDevice* dmlDevice, 
     ID3D12CommandQueue* d3dQueue, 

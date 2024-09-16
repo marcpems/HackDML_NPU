@@ -3,6 +3,11 @@
 
 #include "pch.h"
 #include "helpers.h"
+#include "initguid.h"
+
+//#define INITGUID
+//DEFINE_GUID(DXCORE_ADAPTER_ATTRIBUTE_D3D12_GENERIC_ML, 0xb71b0d41, 0x1088, 0x422f, 0xa2, 0x7c, 0x2, 0x50, 0xb7, 0xd3, 0xa9, 0x88);
+EXTERN_C const GUID DECLSPEC_SELECTANY DXCORE_ADAPTER_ATTRIBUTE_D3D12_GENERIC_ML = { 0xb71b0d41, 0x1088, 0x422f, {0xa2, 0x7c, 0x2, 0x50, 0xb7, 0xd3, 0xa9, 0x88} };
 
 std::tuple<Microsoft::WRL::ComPtr<IDXCoreAdapter>, D3D_FEATURE_LEVEL> SelectAdapter(
     std::string_view adapterNameFilter)
