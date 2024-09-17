@@ -69,46 +69,53 @@ namespace ResNet_Image_ClassificationSample
                 SessionOptions sessionOptions = new SessionOptions();
                 sessionOptions.RegisterOrtExtensions();
 
-                var (dmlDevice, commandQueue) = CreateDmlDeviceAndCommandQueue("NPU");
-
-                var handle = sessionOptions.DangerousGetHandle();
-
-                //sessionOptions.DisableMemPattern();
-                sessionOptions.ExecutionMode = ExecutionMode.ORT_SEQUENTIAL;
-
-                static byte[] StringToZeroTerminatedUtf8(string s)
+                try
                 {
-                    int arraySize = UTF8Encoding.UTF8.GetByteCount(s);
-                    byte[] utf8Bytes = new byte[arraySize + 1];
-                    var bytesWritten = UTF8Encoding.UTF8.GetBytes(s, 0, s.Length, utf8Bytes, 0);
-                    Debug.Assert(arraySize == bytesWritten);
-                    utf8Bytes[utf8Bytes.Length - 1] = 0;
-                    return utf8Bytes;
+                    var (dmlDevice, commandQueue) = CreateDmlDeviceAndCommandQueue("NPU");
+
+                    var handle = sessionOptions.DangerousGetHandle();
+
+                    //sessionOptions.DisableMemPattern();
+                    sessionOptions.ExecutionMode = ExecutionMode.ORT_SEQUENTIAL;
+
+                    static byte[] StringToZeroTerminatedUtf8(string s)
+                    {
+                        int arraySize = UTF8Encoding.UTF8.GetByteCount(s);
+                        byte[] utf8Bytes = new byte[arraySize + 1];
+                        var bytesWritten = UTF8Encoding.UTF8.GetBytes(s, 0, s.Length, utf8Bytes, 0);
+                        Debug.Assert(arraySize == bytesWritten);
+                        utf8Bytes[utf8Bytes.Length - 1] = 0;
+                        return utf8Bytes;
+                    }
+
+                    var utf8ProviderName = StringToZeroTerminatedUtf8("DML");
+
+
+                    // By passing in an explicitly created DML device & queue, the DML execution provider sends work
+                    // to the desired device. If not used, the DML execution provider will create its own device & queue.
+                    OrtDmlApi ortDmlApi;
+                    NativeMethods.OrtGetExecutionProviderApi(utf8ProviderName, NativeMethods.ORT_API_VERSION, out var ortDmlApiPtr);
+                    ortDmlApi = Marshal.PtrToStructure<OrtDmlApi>(ortDmlApiPtr);
+
+                    NativeMethods.OrtSessionOptionsAppendExecutionProvider_DML1 = (NativeMethods.DOrtSessionOptionsAppendExecutionProvider_DML1)Marshal.GetDelegateForFunctionPointer(ortDmlApi.SessionOptionsAppendExecutionProvider_DML1, typeof(NativeMethods.DOrtSessionOptionsAppendExecutionProvider_DML1));
+
+                    NativeMethods.OrtSessionOptionsAppendExecutionProvider_DML1(sessionOptions.DangerousGetHandle(), Marshal.GetIUnknownForObject(dmlDevice), Marshal.GetIUnknownForObject(commandQueue));
+                    //Ort::ThrowOnError(
+                    //ortDmlApi.SessionOptionsAppendExecutionProvider_DML1(
+                    //    sessionOptions, 
+                    //    dmlDevice,
+                    //    commandQueue
+                    //);
+                    //);
+
+                    //NativeMethods.OrtSessionOptionsAppendExecutionProvider_DML1(handle, dmlDevice, commandQueue);
+
+                    _inferenceSession = new InferenceSession(modelPath, sessionOptions);
                 }
-
-                var utf8ProviderName = StringToZeroTerminatedUtf8("DML");
-
-
-                // By passing in an explicitly created DML device & queue, the DML execution provider sends work
-                // to the desired device. If not used, the DML execution provider will create its own device & queue.
-                OrtDmlApi ortDmlApi;
-                NativeMethods.OrtGetExecutionProviderApi(utf8ProviderName, NativeMethods.ORT_API_VERSION, out var ortDmlApiPtr);
-                ortDmlApi = Marshal.PtrToStructure<OrtDmlApi>(ortDmlApiPtr);
-
-                NativeMethods.OrtSessionOptionsAppendExecutionProvider_DML1 = (NativeMethods.DOrtSessionOptionsAppendExecutionProvider_DML1)Marshal.GetDelegateForFunctionPointer(ortDmlApi.SessionOptionsAppendExecutionProvider_DML1, typeof(NativeMethods.DOrtSessionOptionsAppendExecutionProvider_DML1));
-
-                NativeMethods.OrtSessionOptionsAppendExecutionProvider_DML1(sessionOptions.DangerousGetHandle(), Marshal.GetIUnknownForObject(dmlDevice), Marshal.GetIUnknownForObject(commandQueue));
-                //Ort::ThrowOnError(
-                //ortDmlApi.SessionOptionsAppendExecutionProvider_DML1(
-                //    sessionOptions, 
-                //    dmlDevice,
-                //    commandQueue
-                //);
-                //);
-
-                //NativeMethods.OrtSessionOptionsAppendExecutionProvider_DML1(handle, dmlDevice, commandQueue);
-
-                _inferenceSession = new InferenceSession(modelPath, sessionOptions);
+                catch (Exception e)
+                {
+                    Debug.WriteLine(e.Message);
+                }
             });
         }
 
@@ -308,7 +315,7 @@ namespace ResNet_Image_ClassificationSample
             D3D12_FEATURE_DATA_FEATURE_LEVELS featureLevelSupport;
             unsafe
             {
-                fixed(D3D_FEATURE_LEVEL* pFeatureLevelsRequested = featureLevelsRequested)
+                fixed (D3D_FEATURE_LEVEL* pFeatureLevelsRequested = featureLevelsRequested)
                 {
                     featureLevelSupport = new D3D12_FEATURE_DATA_FEATURE_LEVELS
                     {
@@ -413,7 +420,7 @@ namespace ResNet_Image_ClassificationSample
                 // Setup inputs
                 var inputs = new List<NamedOnnxValue>
                 {
-                    NamedOnnxValue.CreateFromTensor((string?)"data", input)
+                    NamedOnnxValue.CreateFromTensor((string?)"image_tensor", input)
                 };
 
                 // Run inference

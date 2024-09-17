@@ -46,7 +46,7 @@
     <PackageReference Include="System.Drawing.Common" Version="8.0.8" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Models\resnet101-v1-7.onnx" />
+    <Content Include="Models\*.onnx" />
   </ItemGroup>
   <!--
     Defining the "HasPackageAndPublishMenuAddedByProject" property here allows the Solution

@@ -9,7 +9,7 @@ namespace ResNet_Image_ClassificationSample
         private bool shouldWaitForCompletion;
 
         public CancellationToken CancellationToken { get; private set; }
-        public string ModelPath => System.IO.Path.Join(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, "Models", @"resnet101-v1-7.onnx");
+        public string ModelPath => System.IO.Path.Join(Windows.ApplicationModel.Package.Current.InstalledLocation.Path, "Models", @"resnet101.onnx");
         
         public bool ShouldWaitForCompletion
         {
